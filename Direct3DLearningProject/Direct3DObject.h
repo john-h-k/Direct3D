@@ -26,6 +26,9 @@ private:
 	ID3D11DeviceContext* context;
 	ID3D11RenderTargetView* renderTargetView;
 
+	D3D11_INPUT_ELEMENT_DESC* layoutArray;
+	UINT layoutElementCount;
+
 	float red;
 	float green;
 	float blue;
@@ -34,4 +37,3 @@ private:
 	int colorModGreen;
 	int colorModBlue;
 };
-

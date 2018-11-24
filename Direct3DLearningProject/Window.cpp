@@ -8,7 +8,7 @@ Window::Window()
 Window::~Window()
 = default;
 
-bool Window::Initialize(HINSTANCE hInstance, int ShowWnd, int width, int height, bool windowed)
+bool Window::Initialize(HINSTANCE hInstance, const int ShowWnd, const int width, const int height, bool windowed)
 {
 	WNDCLASSEX windowClass;
 
@@ -18,23 +18,23 @@ bool Window::Initialize(HINSTANCE hInstance, int ShowWnd, int width, int height,
 	windowClass.cbClsExtra = 0;
 	windowClass.cbWndExtra = 0;
 	windowClass.hInstance = hInstance;
-	windowClass.hIcon = LoadIconA(nullptr, IDI_WINLOGO);
-	windowClass.hCursor = LoadCursorA(nullptr, IDC_ARROW);
+	windowClass.hIcon = LoadIconW(nullptr, IDI_WINLOGO);
+	windowClass.hCursor = LoadCursorW(nullptr, IDC_ARROW);
 	windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 10);
 	windowClass.lpszMenuName = nullptr;
 	windowClass.lpszClassName = WndClassName;
-	windowClass.hIconSm = LoadIconA(nullptr, IDI_WINLOGO);
+	windowClass.hIconSm = LoadIconW(nullptr, IDI_WINLOGO);
 
 	if (!RegisterClassEx(&windowClass))
 	{
-		MessageBox(nullptr, "Error initializing window", "Error", MB_OK | MB_ICONERROR);
+		MessageBoxA(nullptr, "Error initializing window", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 
 	hwnd = CreateWindowEx(
 		0,
 		WndClassName,
-		"Main Window",
+		L"Main Window",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
@@ -48,7 +48,7 @@ bool Window::Initialize(HINSTANCE hInstance, int ShowWnd, int width, int height,
 
 	if (!hwnd)
 	{
-		MessageBox(nullptr, "Error initializing window", "Error", MB_OK | MB_ICONERROR);
+		MessageBoxA(nullptr, "Error initializing window", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 
@@ -58,9 +58,10 @@ bool Window::Initialize(HINSTANCE hInstance, int ShowWnd, int width, int height,
 	return true;
 }
 
-int Window::MessageLoop(IUpdateable &update) const
+int Window::MessageLoop(IUpdateable &updateable) const
 {
 	MSG msg;
+
 	ZeroMemory(&msg, sizeof(MSG));
 
 	while (true)
@@ -75,7 +76,7 @@ int Window::MessageLoop(IUpdateable &update) const
 		}
 		else
 		{
-			update.Update();
+			updateable.Update();
 		}
 	}
 
@@ -89,7 +90,7 @@ LRESULT Window::WndProc(HWND hwnd, const UINT msg, const WPARAM wParam, const LP
 	case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE)
 		{
-			if (MessageBox(nullptr, "Confirm exit", "Exit", MB_YESNO | MB_ICONQUESTION) == IDYES)
+			if (MessageBoxA(nullptr, "Confirm exit", "Exit", MB_YESNO | MB_ICONQUESTION) == IDYES)
 			{
 				DestroyWindow(hwnd);
 			}
@@ -101,6 +102,6 @@ LRESULT Window::WndProc(HWND hwnd, const UINT msg, const WPARAM wParam, const LP
 		return 0;
 
 	default:
-		return DefWindowProc(hwnd, msg, wParam, lParam);;
+		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
 }

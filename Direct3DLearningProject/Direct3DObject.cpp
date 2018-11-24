@@ -2,7 +2,7 @@
 #include <string>
 #include <sstream>
 
-using RGBA = float[4];
+using XDEPRECATEDCOLOR = float[4];
 
 Direct3DObject::Direct3DObject() :
 	swapChain(nullptr),
@@ -10,6 +10,15 @@ Direct3DObject::Direct3DObject() :
 	context(nullptr),
 	renderTargetView(nullptr)
 {
+	D3D11_INPUT_ELEMENT_DESC tempLayoutArray[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	};
+
+	layoutArray = +tempLayoutArray;
+
+	layoutElementCount = ARRAYSIZE(tempLayoutArray);
+
 	red = 0.0f;
 	green = 0.0f;
 	blue = 0.0f;
@@ -18,7 +27,6 @@ Direct3DObject::Direct3DObject() :
 	colorModGreen = 1;
 	colorModBlue = 1;
 }
-
 
 Direct3DObject::~Direct3DObject()
 = default;
@@ -58,7 +66,8 @@ bool Direct3DObject::InitializeDirect3D11App(HINSTANCE hInstance, int width, int
 
 	// Create the device and swap chain using the descriptions
 	hr = D3D11CreateDeviceAndSwapChain(
-		nullptr, D3D_DRIVER_TYPE_HARDWARE,
+		nullptr,
+		D3D_DRIVER_TYPE_HARDWARE,
 		nullptr,
 		0,
 		nullptr,
@@ -77,7 +86,7 @@ bool Direct3DObject::InitializeDirect3D11App(HINSTANCE hInstance, int width, int
 
 		stringstream << "Fatal error occured in creation of Device or Swap Chain - HRESULT:  " << hr;
 
-		MessageBox(hwnd, stringstream.str().c_str(), "Error", MB_OK);
+		MessageBoxA(hwnd, stringstream.str().c_str(), "Error", MB_OK);
 		return false;
 	}
 
@@ -91,7 +100,7 @@ bool Direct3DObject::InitializeDirect3D11App(HINSTANCE hInstance, int width, int
 
 		stringstream << "Fatal error occured in creation of Buffer - HRESULT: " << hr;
 
-		MessageBox(hwnd, stringstream.str().c_str(), "Error", MB_OK);
+		MessageBoxA(hwnd, stringstream.str().c_str(), "Error", MB_OK);
 		return false;
 	}
 
@@ -104,7 +113,7 @@ bool Direct3DObject::InitializeDirect3D11App(HINSTANCE hInstance, int width, int
 
 		stringstream << "Fatal error occured in creation of Render Target View - HRESULT: " << hr;
 
-		MessageBox(hwnd, stringstream.str().c_str(), "Error", MB_OK);
+		MessageBoxA(hwnd, stringstream.str().c_str(), "Error", MB_OK);
 		return false;
 	}
 
@@ -144,7 +153,7 @@ void Direct3DObject::UpdateScene()
 void Direct3DObject::DrawScene() const
 {
 	// Clear BackBuffer and change color
-	const auto color = new RGBA { red, green, blue, 1.0f };
+	const auto color = new XDEPRECATEDCOLOR{ red, green, blue, 1.0f };
 
 	context->ClearRenderTargetView(renderTargetView, color);
 

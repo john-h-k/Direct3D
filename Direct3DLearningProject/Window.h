@@ -13,12 +13,11 @@ public:
 
 	HWND GetHandle() const { return hwnd; }
 
-	int MessageLoop(IUpdateable &update) const;
+	int MessageLoop(IUpdateable & updateable) const;
 private:
-	LPCSTR WndClassName = "Window";
+	LPCWSTR WndClassName = L"Window";
 	HWND hwnd = nullptr;
 
 	LRESULT static CALLBACK WndProc(HWND hwnd, UINT msg,
 		WPARAM wParam, LPARAM lParam);
 };
-
