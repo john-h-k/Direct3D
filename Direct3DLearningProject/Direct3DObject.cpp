@@ -1,4 +1,6 @@
 #include "Direct3DObject.h"
+#include <string>
+#include <sstream>
 
 using RGBA = float[4];
 
@@ -71,7 +73,11 @@ bool Direct3DObject::InitializeDirect3D11App(HINSTANCE hInstance, int width, int
 
 	if (FAILED(hr))
 	{
-		MessageBox(hwnd, &"Fatal error occured in creation of Device or Swap Chain: "[hr], "Error", MB_OK);
+		std::stringstream stringstream;
+
+		stringstream << "Fatal error occured in creation of Device or Swap Chain - HRESULT:  " << hr;
+
+		MessageBox(hwnd, stringstream.str().c_str(), "Error", MB_OK);
 		return false;
 	}
 
@@ -81,7 +87,11 @@ bool Direct3DObject::InitializeDirect3D11App(HINSTANCE hInstance, int width, int
 
 	if (FAILED(hr))
 	{
-		MessageBox(hwnd, &"Fatal error occured in creation of Buffer: " + std, "Error", MB_OK);
+		std::stringstream stringstream;
+
+		stringstream << "Fatal error occured in creation of Buffer - HRESULT: " << hr;
+
+		MessageBox(hwnd, stringstream.str().c_str(), "Error", MB_OK);
 		return false;
 	}
 
@@ -90,7 +100,11 @@ bool Direct3DObject::InitializeDirect3D11App(HINSTANCE hInstance, int width, int
 
 	if (FAILED(hr))
 	{
-		MessageBox(hwnd, &"Fatal error occured in creation of Render Target: ", "Error", MB_OK);
+		std::stringstream stringstream;
+
+		stringstream << "Fatal error occured in creation of Render Target View - HRESULT: " << hr;
+
+		MessageBox(hwnd, stringstream.str().c_str(), "Error", MB_OK);
 		return false;
 	}
 
@@ -130,7 +144,7 @@ void Direct3DObject::UpdateScene()
 void Direct3DObject::DrawScene() const
 {
 	// Clear BackBuffer and change color
-	const auto color = RGBA{ red, green, blue, 1.0f };
+	const auto color = new RGBA { red, green, blue, 1.0f };
 
 	context->ClearRenderTargetView(renderTargetView, color);
 
