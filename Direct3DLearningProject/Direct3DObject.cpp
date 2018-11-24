@@ -1,6 +1,12 @@
 #include "Direct3DObject.h"
 
-Direct3DObject::Direct3DObject()
+using RGBA = float[4];
+
+Direct3DObject::Direct3DObject() :
+	swapChain(nullptr),
+	device(nullptr),
+	context(nullptr),
+	renderTargetView(nullptr)
 {
 	red = 0.0f;
 	green = 0.0f;
@@ -49,28 +55,51 @@ bool Direct3DObject::InitializeDirect3D11App(HINSTANCE hInstance, int width, int
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
 	// Create the device and swap chain using the descriptions
-	hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE,
-		nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &swapChainDesc, &swapChain, &device, nullptr, &context);
+	hr = D3D11CreateDeviceAndSwapChain(
+		nullptr, D3D_DRIVER_TYPE_HARDWARE,
+		nullptr,
+		0,
+		nullptr,
+		0,
+		D3D11_SDK_VERSION,
+		&swapChainDesc,
+		&swapChain,
+		&device,
+		nullptr,
+		&context
+	);
 
-	/* Check HRESULT */
+	if (FAILED(hr))
+	{
+		MessageBox(hwnd, &"Fatal error occured in creation of Device or Swap Chain: "[hr], "Error", MB_OK);
+		return false;
+	}
 
 	// Declare and create the back buffer using the descriptions
 	ID3D11Texture2D* BackBuffer;
 	hr = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&BackBuffer));
 
-	// Check HRESULT
+	if (FAILED(hr))
+	{
+		MessageBox(hwnd, &"Fatal error occured in creation of Buffer: " + std, "Error", MB_OK);
+		return false;
+	}
 
 	hr = device->CreateRenderTargetView(BackBuffer, nullptr, &renderTargetView);
 	BackBuffer->Release();
 
-	/* Check HRESULT */
+	if (FAILED(hr))
+	{
+		MessageBox(hwnd, &"Fatal error occured in creation of Render Target: ", "Error", MB_OK);
+		return false;
+	}
 
 	context->OMSetRenderTargets(1, &renderTargetView, nullptr);
 
 	return true;
 }
 
-void Direct3DObject::ReleaseObjects()
+void Direct3DObject::ReleaseObjects() const
 {
 	// Release all COM objects
 	swapChain->Release();
@@ -98,10 +127,10 @@ void Direct3DObject::UpdateScene()
 		colorModBlue *= -1;
 }
 
-void Direct3DObject::DrawScene()
+void Direct3DObject::DrawScene() const
 {
 	// Clear BackBuffer and change color
-	float color[] = { red, green, blue, 1.0f };
+	const auto color = RGBA{ red, green, blue, 1.0f };
 
 	context->ClearRenderTargetView(renderTargetView, color);
 

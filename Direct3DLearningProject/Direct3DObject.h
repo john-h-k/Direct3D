@@ -14,10 +14,10 @@ public:
 	~Direct3DObject();
 
 	bool InitializeDirect3D11App(HINSTANCE hInstance, int width, int height, HWND hwnd);
-	void ReleaseObjects();
+	void ReleaseObjects() const;
 	bool InitializeScene();
 	void UpdateScene();
-	void DrawScene();
+	void DrawScene() const;
 	void Update() override;
 
 private:
