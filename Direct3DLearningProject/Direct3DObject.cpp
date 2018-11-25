@@ -5,33 +5,23 @@
 #include <minwinbase.h>
 #include <atlstr.h>
 #include <fstream>
+#include <comdef.h>
 
 #define MESSAGE_FAILED(HR, STRING) CheckFail(HR, STRING)
 
-using XDEPRECATEDCOLOR = float[4];
+using DIRECTX10COLOR = float[4];
 
 Direct3DObject::Direct3DObject() :
-	window(nullptr),
 	height(0),
-	width(0),
-	swapChain(nullptr),
-	device(nullptr),
-	context(nullptr),
-	renderTargetView(nullptr),
-	triangularVertexBuffer(nullptr)
+	width(0)
 {
+	layoutArray[0] =
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0};
 
-	layoutArray[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 };
+	layoutArray[1] =
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0};
 
 	layoutElementCount = ARRAYSIZE(layoutArray);
-
-	red = 0.0f;
-	green = 0.0f;
-	blue = 0.0f;
-
-	colorModRed = 1;
-	colorModGreen = 1;
-	colorModBlue = 1;
 }
 
 Direct3DObject::~Direct3DObject()
@@ -186,9 +176,9 @@ bool Direct3DObject::InitializeScene()
 
 	Vertex vertices[] =
 	{
-		Vertex(0.0f, 0.5f, 0.5f),
-		Vertex(0.5f, -0.5f, 0.5f),
-		Vertex(-0.5f, -0.5f, 0.5f)
+		Vertex(0.0f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f),
+		Vertex(0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f),
+		Vertex(-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f)
 	};
 
 	const auto count = ARRAYSIZE(vertices);
@@ -198,7 +188,7 @@ bool Direct3DObject::InitializeScene()
 	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
 
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = (sizeof(Vertex) * count) * 16;
+	vertexBufferDesc.ByteWidth = (sizeof(Vertex) * count) + (16 - ((sizeof(Vertex) * count) % 16));
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = 0;
 	vertexBufferDesc.MiscFlags = 0;
@@ -219,7 +209,9 @@ bool Direct3DObject::InitializeScene()
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
+
 	context->IASetVertexBuffers(0, 1, &triangularVertexBuffer, &stride, &offset);
+
 	device->CreateInputLayout(layoutArray, layoutElementCount, vertexShaderBuffer->GetBufferPointer(),
 		vertexShaderBuffer->GetBufferSize(), &vertexLayout);
 
@@ -246,8 +238,8 @@ void Direct3DObject::UpdateScene()
 void Direct3DObject::DrawScene() const
 {
 	// Clear BackBuffer and change color
-	const auto color = new XDEPRECATEDCOLOR{ 0.0f, 0.0f, 0.0f, 1.0f };
-
+	const auto color = new DIRECTX10COLOR { 0.0f, 0.0f, 0.0f, 1.0f };
+	
 	context->ClearRenderTargetView(renderTargetView, color);
 
 	context->Draw(3, 0);
@@ -268,7 +260,8 @@ bool Direct3DObject::CheckFail(const HRESULT hr, const LPCWSTR str) const
 	{
 		std::stringstream stringstream;
 
-		stringstream << CW2A(str) << " HRESULT Error Code: " << hr;
+		stringstream << CW2A(str) << " HRESULT Error Code: "
+		<< hr << " (" << CW2A(_com_error(hr).ErrorMessage()) << ")";
 
 		MessageBoxA(window, stringstream.str().c_str(), "Error", MB_OK);
 

@@ -25,30 +25,22 @@ public:
 private:
 	bool CheckFail(HRESULT hr, LPCWSTR str) const;
 
-	HWND window;
+	HWND window{};
 	float height;
 	float width;
 
-	IDXGISwapChain* swapChain;
-	ID3D11Device* device;
-	ID3D11DeviceContext* context;
-	ID3D11RenderTargetView* renderTargetView;
+	IDXGISwapChain* swapChain{};
+	ID3D11Device* device{};
+	ID3D11DeviceContext* context{};
+	ID3D11RenderTargetView* renderTargetView{};
 
-	ID3D11Buffer* triangularVertexBuffer;
+	ID3D11Buffer* triangularVertexBuffer{};
 	ID3D11VertexShader* vertexShader{};
 	ID3D11PixelShader* pixelShader{};
 	ID3D10Blob* vertexShaderBuffer{};
 	ID3D10Blob* pixelShaderBuffer{};
 	ID3D11InputLayout* vertexLayout{};
 
-	D3D11_INPUT_ELEMENT_DESC layoutArray[1];
+	D3D11_INPUT_ELEMENT_DESC layoutArray[2];
 	UINT layoutElementCount;
-
-	float red;
-	float green;
-	float blue;
-
-	int colorModRed;
-	int colorModGreen;
-	int colorModBlue;
 };
