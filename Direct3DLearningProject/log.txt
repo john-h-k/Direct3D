@@ -1,0 +1,1 @@
+Shader compile error message: C:\Users\johnk\source\repos\Direct3DLearningProject\Direct3DLearningProject\Effects.hlsl(1,13-23): error X4502: invalid vs_4_0 output semantic 'SV_TARGET'

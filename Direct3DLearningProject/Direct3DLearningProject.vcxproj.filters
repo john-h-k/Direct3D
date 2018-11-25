@@ -51,8 +51,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Xsd Include="Effects.fx">
-      <Filter>Source Files</Filter>
-    </Xsd>
+    <FxCompile Include="Effects.hlsl" />
   </ItemGroup>
 </Project>
