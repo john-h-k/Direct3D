@@ -41,6 +41,6 @@ private:
 	ID3D10Blob* pixelShaderBuffer{};
 	ID3D11InputLayout* vertexLayout{};
 
-	D3D11_INPUT_ELEMENT_DESC layoutArray[2];
+	D3D11_INPUT_ELEMENT_DESC layoutArray[2]{};
 	UINT layoutElementCount;
 };
