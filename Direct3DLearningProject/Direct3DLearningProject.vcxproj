@@ -122,14 +122,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Direct3DObject.h" />
+    <ClInclude Include="DataTypes.h" />
+    <ClInclude Include="Renderer.h" />
     <ClInclude Include="IUpdateable.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Direct3DObject.cpp" />
+    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="WinMain.cpp" />

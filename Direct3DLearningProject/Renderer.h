@@ -12,10 +12,14 @@
 class Renderer final : public IUpdateable
 {
 public:
+	// TODO Implement copy / move constructors?
 	Renderer();
+	Renderer(const Renderer& renderer) = delete;
+	Renderer(const Renderer&& renderer) = delete;
 	~Renderer();
 
 	Renderer& operator = (const Renderer&) = delete;
+	Renderer& operator = (const Renderer&&) = delete;
 
 	bool InitializeDirect3D11App(HINSTANCE hInstance, int width, int height, HWND hwnd);
 	void ReleaseObjects();
@@ -33,6 +37,11 @@ private:
 	HWND window{};
 	float height;
 	float width;
+
+	// DO NOT DELETE THESE OBJECTS USING "delete"!!
+	// They are COM objects and will destroy themselves
+	// once they have no references left to them. Just call "Release()"
+	// when you are finished with them
 
 	IDXGISwapChain* swapChain{};
 	ID3D11Device* device{};

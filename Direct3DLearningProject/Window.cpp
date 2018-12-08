@@ -1,6 +1,6 @@
 #include "Window.h"
 
-#include "Direct3DObject.h"
+#include "Renderer.h"
 
 Window::Window()
 = default;
@@ -25,13 +25,13 @@ bool Window::Initialize(HINSTANCE hInstance, const int ShowWnd, const int width,
 	windowClass.lpszClassName = WndClassName;
 	windowClass.hIconSm = LoadIconW(nullptr, IDI_WINLOGO);
 
-	if (!RegisterClassEx(&windowClass))
+	if (!RegisterClassExW(&windowClass))
 	{
-		MessageBoxA(nullptr, "Error initializing window", "Error", MB_OK | MB_ICONERROR);
+		MessageBoxW(nullptr, L"Error initializing window", L"Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 
-	hwnd = CreateWindowEx(
+	hwnd = CreateWindowExW(
 		0,
 		WndClassName,
 		L"Main Window",
@@ -58,7 +58,7 @@ bool Window::Initialize(HINSTANCE hInstance, const int ShowWnd, const int width,
 	return true;
 }
 
-int Window::MessageLoop(IUpdateable &updateable) const
+WPARAM Window::MessageLoop(IUpdateable &updateable) const
 {
 	MSG msg;
 
@@ -66,13 +66,13 @@ int Window::MessageLoop(IUpdateable &updateable) const
 
 	while (true)
 	{
-		if (PeekMessage(&msg, hwnd, 0, 0, PM_REMOVE))
+		if (PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE))
 		{
 			if (msg.message == WM_QUIT)
 				break;
 
 			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+			DispatchMessageW(&msg);
 		}
 		else
 		{
@@ -80,7 +80,7 @@ int Window::MessageLoop(IUpdateable &updateable) const
 		}
 	}
 
-	return static_cast<int>(msg.wParam);
+	return msg.wParam;
 }
 
 LRESULT Window::WndProc(HWND hwnd, const UINT msg, const WPARAM wParam, const LPARAM lParam)
@@ -90,7 +90,7 @@ LRESULT Window::WndProc(HWND hwnd, const UINT msg, const WPARAM wParam, const LP
 	case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE)
 		{
-			if (MessageBoxA(nullptr, "Confirm exit", "Exit", MB_YESNO | MB_ICONQUESTION) == IDYES)
+			if (MessageBoxW(nullptr, L"Confirm exit", L"Exit", MB_YESNO | MB_ICONQUESTION) == IDYES)
 			{
 				DestroyWindow(hwnd);
 			}
@@ -102,6 +102,6 @@ LRESULT Window::WndProc(HWND hwnd, const UINT msg, const WPARAM wParam, const LP
 		return 0;
 
 	default:
-		return DefWindowProc(hwnd, msg, wParam, lParam);
+		return DefWindowProcW(hwnd, msg, wParam, lParam);
 	}
 }

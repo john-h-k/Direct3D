@@ -13,7 +13,7 @@ public:
 
 	HWND GetHandle() const { return hwnd; }
 
-	int MessageLoop(IUpdateable & updateable) const;
+	WPARAM MessageLoop(IUpdateable & updateable) const;
 private:
 	LPCWSTR WndClassName = L"Window";
 	HWND hwnd = nullptr;
