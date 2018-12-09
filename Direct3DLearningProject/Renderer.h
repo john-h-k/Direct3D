@@ -12,17 +12,16 @@
 class Renderer final : public IUpdateable
 {
 public:
-	// TODO Implement copy / move constructors?
 	Renderer();
 	Renderer(const Renderer& renderer) = delete;
-	Renderer(const Renderer&& renderer) = delete;
+	Renderer(Renderer&& renderer) = default;
 	~Renderer();
 
-	Renderer& operator = (const Renderer&) = delete;
-	Renderer& operator = (const Renderer&&) = delete;
+	Renderer& operator = (const Renderer& renderer) = delete;
+	Renderer& operator = (Renderer&& renderer) = default;
 
-	bool InitializeDirect3D11App(HINSTANCE hInstance, int width, int height, HWND hwnd);
-	void ReleaseObjects();
+	bool InitializeDirect3D11App(HINSTANCE hInstance, int width, int height, HWND windowHandle);
+	void Release();
 	bool InitializeScene();
 	void UpdateScene();
 	void DrawScene() const;
@@ -32,6 +31,7 @@ private:
 	bool CheckFailW(HRESULT hr, LPCWSTR str) const;
 	bool CheckFailA(HRESULT hr, LPCSTR str) const;
 
+	bool initialized;
 	bool released;
 
 	HWND window{};
@@ -51,8 +51,8 @@ private:
 	ID3D11Buffer* triangularVertexBuffer{};
 	ID3D11VertexShader* vertexShader{};
 	ID3D11PixelShader* pixelShader{};
-	ID3D10Blob* vertexShaderBuffer{};
-	ID3D10Blob* pixelShaderBuffer{};
+	ID3DBlob* vertexShaderBuffer{};
+	ID3DBlob* pixelShaderBuffer{};
 	ID3D11InputLayout* vertexLayout{};
 
 	D3D11_INPUT_ELEMENT_DESC layoutArray[2]{};

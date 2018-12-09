@@ -1,20 +1,39 @@
 #include "Window.h"
 
 #include "Renderer.h"
+#include <cassert>
+#include <stdexcept>
 
-Window::Window()
-= default;
+std::vector<Window*> Window::windows;
+
+Window::Window() : destroyed(false), windowHandle(nullptr, WinHandleDeleter(destroyed))
+{
+	// Add this window to the static array of all windows,
+	// and get the index of this
+	windows.push_back(this);
+	windowIndex = windows.size() - 1;
+}
 
 Window::~Window()
-= default;
+{
+	if (!destroyed)
+	{
+		// What to do if destroy failed? TODO
+		destroyed = DestroyWindow(HWND_FROM_UP(windowHandle));
+	}
+	// Remove current instance from static
+	windows.erase(windows.begin() + windowIndex);
+	
+}
 
 bool Window::Initialize(HINSTANCE hInstance, const int ShowWnd, const int width, const int height, bool windowed)
 {
+	// The descriptor of this window
 	WNDCLASSEX windowClass;
 
-	windowClass.cbSize = sizeof(WNDCLASSEX);
-	windowClass.style = CS_HREDRAW | CS_VREDRAW;
-	windowClass.lpfnWndProc = WndProc;
+	windowClass.cbSize = sizeof(WNDCLASSEX); // Size of the struct
+	windowClass.style = CS_HREDRAW | CS_VREDRAW; // Redraw when the window is moved/resized
+	windowClass.lpfnWndProc = WndProc; // The function called for messages
 	windowClass.cbClsExtra = 0;
 	windowClass.cbWndExtra = 0;
 	windowClass.hInstance = hInstance;
@@ -31,7 +50,7 @@ bool Window::Initialize(HINSTANCE hInstance, const int ShowWnd, const int width,
 		return false;
 	}
 
-	hwnd = CreateWindowExW(
+	windowHandle = handle_pointer(CreateWindowExW(
 		0,
 		WndClassName,
 		L"Main Window",
@@ -44,21 +63,21 @@ bool Window::Initialize(HINSTANCE hInstance, const int ShowWnd, const int width,
 		nullptr,
 		hInstance,
 		nullptr
-	);
+	), WinHandleDeleter(destroyed));
 
-	if (!hwnd)
+	if (!windowHandle)
 	{
 		MessageBoxA(nullptr, "Error initializing window", "Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 
-	ShowWindow(hwnd, ShowWnd);
-	UpdateWindow(hwnd);
+	ShowWindow(HWND_FROM_UP(windowHandle), ShowWnd);
+	UpdateWindow(HWND_FROM_UP(windowHandle));
 
 	return true;
 }
 
-WPARAM Window::MessageLoop(IUpdateable &updateable) const
+WPARAM Window::EnterMessageLoop(IUpdateable &updateable) const
 {
 	MSG msg;
 
@@ -66,7 +85,7 @@ WPARAM Window::MessageLoop(IUpdateable &updateable) const
 
 	while (true)
 	{
-		if (PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE))
+		if (PeekMessageW(&msg, HWND_FROM_UP(windowHandle), 0, 0, PM_REMOVE))
 		{
 			if (msg.message == WM_QUIT)
 				break;
@@ -83,7 +102,7 @@ WPARAM Window::MessageLoop(IUpdateable &updateable) const
 	return msg.wParam;
 }
 
-LRESULT Window::WndProc(HWND hwnd, const UINT msg, const WPARAM wParam, const LPARAM lParam)
+LRESULT Window::WndProc(HWND windowHandle, const UINT msg, const WPARAM wParam, const LPARAM lParam)
 {
 	switch (msg)
 	{
@@ -92,7 +111,24 @@ LRESULT Window::WndProc(HWND hwnd, const UINT msg, const WPARAM wParam, const LP
 		{
 			if (MessageBoxW(nullptr, L"Confirm exit", L"Exit", MB_YESNO | MB_ICONQUESTION) == IDYES)
 			{
-				DestroyWindow(hwnd);
+				Window* ref = nullptr;
+				// If exiting, a short for loop won't hurt performance
+				// Link the HWND handle to the respective window using the static
+				// array
+				for (auto& window : windows)
+				{
+					if (window->GetHandle() == windowHandle)
+					{
+						ref = window;
+					}
+				}
+
+				// If no window is found, something has gone wrong. Fatal error
+				if (!ref)
+				{
+					throw std::logic_error("No corresponding window found for HWND");
+				}
+				ref->destroyed = static_cast<bool>(DestroyWindow(windowHandle));
 			}
 		}
 		return 0;
@@ -102,6 +138,6 @@ LRESULT Window::WndProc(HWND hwnd, const UINT msg, const WPARAM wParam, const LP
 		return 0;
 
 	default:
-		return DefWindowProcW(hwnd, msg, wParam, lParam);
+		return DefWindowProcW(windowHandle, msg, wParam, lParam);
 	}
 }

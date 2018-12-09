@@ -8,20 +8,39 @@
 #include <comdef.h>
 #include "DataTypes.h"
 
-using DIRECTX10COLOR = float[4];
+#define REQUIRED_BYTE_WIDTH 16
+#define PAD_UP(TYPE, COUNT, PAD_UP_MOD_VALUE) ((sizeof(TYPE) * COUNT) + (PAD_UP_MOD_VALUE - ((sizeof(TYPE) * COUNT) % PAD_UP_MOD_VALUE)))
+
 
 Renderer::Renderer() :
+	initialized(false),
+	released(false),
 	height(0),
 	width(0),
-	released(false),
 	layoutElementCount(0)
 
 {
 	layoutArray[0] =
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0};
+		{
+			"POSITION", 
+			0, 
+			DXGI_FORMAT_R32G32B32_FLOAT, 
+			0, 
+			0, 
+			D3D11_INPUT_PER_VERTEX_DATA, 
+			0 
+		};
 
 	layoutArray[1] =
-		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0};
+		{ 
+			"COLOR", 
+			0,
+			DXGI_FORMAT_R32G32B32A32_FLOAT, 
+			0, 
+			12, 
+			D3D11_INPUT_PER_VERTEX_DATA, 
+			0 
+		};
 
 	layoutElementCount = ARRAYSIZE(layoutArray);
 }
@@ -30,17 +49,15 @@ Renderer::~Renderer()
 {
 	if (!released)
 	{
-		this->ReleaseObjects();
+		this->Release();
 	}
 }
 
-bool Renderer::InitializeDirect3D11App(HINSTANCE hInstance, int width, int height, HWND hwnd)
+bool Renderer::InitializeDirect3D11App(HINSTANCE hInstance, int width, int height, HWND windowHandle)
 {
-	window = static_cast<HWND>(hwnd);
+	this->window = windowHandle;
 	this->height = static_cast<float>(height);
 	this->width = static_cast<float>(width);
-
-	HRESULT hr;
 
 	// Declare the buffer description
 	DXGI_MODE_DESC bufferDesc;
@@ -72,7 +89,7 @@ bool Renderer::InitializeDirect3D11App(HINSTANCE hInstance, int width, int heigh
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
 	// Create the device and swap chain using the descriptions
-	hr = D3D11CreateDeviceAndSwapChain(
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(
 		nullptr,
 		D3D_DRIVER_TYPE_HARDWARE,
 		nullptr,
@@ -102,10 +119,12 @@ bool Renderer::InitializeDirect3D11App(HINSTANCE hInstance, int width, int heigh
 
 	context->OMSetRenderTargets(1, &renderTargetView, nullptr);
 
+	this->initialized = true;
+	
 	return true;
 }
 
-void Renderer::ReleaseObjects()
+void Renderer::Release()
 {
 	// Release all COM objects
 	swapChain->Release();
@@ -126,7 +145,7 @@ bool Renderer::InitializeScene()
 {
 	HRESULT hr;
 
-	ID3D10Blob* errors;
+	ID3DBlob* errors;
 
 	hr = D3DCompileFromFile(
 		L"Effects.hlsl",
@@ -185,9 +204,9 @@ bool Renderer::InitializeScene()
 
 	Vertex vertices[] =
 	{
-		Vertex(0.0f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f),
-		Vertex(0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f),
-		Vertex(-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f)
+		Vertex(0.0f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.5f),
+		Vertex(0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.5f),
+		Vertex(-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.5f)
 	};
 
 	const auto count = ARRAYSIZE(vertices);
@@ -197,7 +216,7 @@ bool Renderer::InitializeScene()
 	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
 
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = (sizeof(Vertex) * count) + (16 - ((sizeof(Vertex) * count) % 16));
+	vertexBufferDesc.ByteWidth = PAD_UP(Vertex, count, REQUIRED_BYTE_WIDTH);
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = 0;
 	vertexBufferDesc.MiscFlags = 0;
@@ -247,9 +266,9 @@ void Renderer::UpdateScene()
 void Renderer::DrawScene() const
 {
 	// Clear BackBuffer and change color
-	const auto color = new DIRECTX10COLOR { 0.0f, 0.0f, 0.0f, 1.0f };
+	const auto color = new DirectX::XMFLOAT4 { 0.0f, 0.0f, 0.0f, 1.0f };
 	
-	context->ClearRenderTargetView(renderTargetView, color);
+	context->ClearRenderTargetView(renderTargetView, reinterpret_cast<FLOAT*>(color));
 
 	context->Draw(3, 0);
 
@@ -283,12 +302,12 @@ bool Renderer::CheckFailA(const HRESULT hr, const LPCSTR str) const
 {
 	if (FAILED(hr))
 	{
-		std::stringstream stringstream;
+		std::wstringstream stringstream;
 
 		stringstream << str << " HRESULT Error Code: "
-			<< hr << " (" << CW2A(_com_error(hr).ErrorMessage()) << ")";
+			<< hr << " (" << _com_error(hr).ErrorMessage() << ")";
 
-		MessageBoxA(window, stringstream.str().c_str(), "Error", MB_OK);
+		MessageBoxW(window, stringstream.str().c_str(), L"Error", MB_OK);
 
 		return true;
 	}
