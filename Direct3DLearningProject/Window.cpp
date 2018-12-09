@@ -6,12 +6,17 @@
 
 std::vector<Window*> Window::windows;
 
-Window::Window() : destroyed(false), windowHandle(nullptr, WinHandleDeleter(destroyed))
+Window::Window() : destroyed(false), windowHandle(nullptr, WinHandleDeleter(&destroyed))
 {
 	// Add this window to the static array of all windows,
 	// and get the index of this
 	windows.push_back(this);
 	windowIndex = windows.size() - 1;
+}
+
+void WinHandleDeleter::operator()(HWND handle) const noexcept
+{
+	*destroyed = static_cast<bool>(DestroyWindow(handle));
 }
 
 Window::~Window()
@@ -63,7 +68,7 @@ bool Window::Initialize(HINSTANCE hInstance, const int ShowWnd, const int width,
 		nullptr,
 		hInstance,
 		nullptr
-	), WinHandleDeleter(destroyed));
+	), WinHandleDeleter(&destroyed));
 
 	if (!windowHandle)
 	{
@@ -77,7 +82,7 @@ bool Window::Initialize(HINSTANCE hInstance, const int ShowWnd, const int width,
 	return true;
 }
 
-WPARAM Window::EnterMessageLoop(IUpdateable &updateable) const
+WPARAM Window::EnterMessageLoop(IUpdateable& updateable)
 {
 	MSG msg;
 
@@ -85,7 +90,7 @@ WPARAM Window::EnterMessageLoop(IUpdateable &updateable) const
 
 	while (true)
 	{
-		if (PeekMessageW(&msg, HWND_FROM_UP(windowHandle), 0, 0, PM_REMOVE))
+		if (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			if (msg.message == WM_QUIT)
 				break;

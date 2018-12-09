@@ -10,12 +10,12 @@
 
 struct WinHandleDeleter final
 {
-	bool& destroyed;
+	bool* destroyed;
 
-	explicit WinHandleDeleter(bool& destroyed) : destroyed(destroyed)
+	explicit WinHandleDeleter(bool* destroyed) : destroyed(destroyed)
 	{}
 
-	void operator ()(HWND handle) const { destroyed = static_cast<bool>(DestroyWindow(handle)); }
+	void operator ()(HWND handle) const noexcept;
 };
 
 using handle_pointer = std::unique_ptr<std::remove_pointer_t<HWND>, WinHandleDeleter>;
@@ -36,7 +36,7 @@ public:
 
 	auto GetHandle() const { return HWND_FROM_UP(windowHandle); }
 
-	WPARAM EnterMessageLoop(IUpdateable& updateable) const;
+	static WPARAM EnterMessageLoop(IUpdateable& updateable);
 private:
 	bool destroyed;
 	static std::vector<Window*> windows;
