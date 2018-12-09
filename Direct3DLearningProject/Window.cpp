@@ -5,15 +5,17 @@
 #include <stdexcept>
 #include <tchar.h>
 #include "DataTypes.h"
-#include "Updateables.h"
+#include "IUpdateable.h"
 
 #define CONFIRM_EXIT (MessageBoxW(nullptr, L"Are you sure you want to exit?", L"Confirm exit", MB_YESNO | MB_ICONQUESTION) == IDYES)
 
 std::vector<Window*> Window::windows;
 
-Window::Window() : destroyed(false), interval(), frequency(), windowHandle(nullptr, WinHandleDeleter(&destroyed))
+Window::Window() : destroyed(false), windowHandle(nullptr, WinHandleDeleter(&destroyed))  // NOLINT
 {
-	QueryPerformanceFrequency(&frequency);
+	LARGE_INTEGER freq;
+	QueryPerformanceFrequency(&freq);
+	frequency = freq.QuadPart / 1000.0;
 	// Add this window to the static array of all windows,
 	// and get the index of this
 	windows.push_back(this);
@@ -94,6 +96,11 @@ WPARAM Window::EnterMessageLoop(IUpdateable& updateable)
 
 	ZeroMemory(&msg, sizeof(MSG));
 
+	LARGE_INTEGER interval;
+	LARGE_INTEGER delta;
+
+	QueryPerformanceCounter(&interval);
+
 	while (true)
 	{
 		if (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -109,8 +116,8 @@ WPARAM Window::EnterMessageLoop(IUpdateable& updateable)
 		}
 		else
 		{
-			QueryPerformanceCounter(&interval);
-			updateable.Update(interval.QuadPart / static_cast<double>(frequency.QuadPart));
+			QueryPerformanceCounter(&delta);
+			updateable.Update((delta.QuadPart - interval.QuadPart) / frequency);
 			QueryPerformanceCounter(&interval);
 		}
 	}

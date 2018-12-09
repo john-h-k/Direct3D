@@ -1,6 +1,7 @@
 #include <windows.h>
 #include "Window.h"
 #include "Renderer.h"
+#include <vld.h>
 
 const int Width = 800;
 const int Height = 600;

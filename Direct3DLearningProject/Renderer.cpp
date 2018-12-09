@@ -7,9 +7,11 @@
 #include <fstream>
 #include <comdef.h>
 #include "DataTypes.h"
+#include <iomanip>
+#include "D3DCOLOR.h"
 
-#define INTERVAL_DEBUG
-
+#define DOUBLE_PRECISION 17 // 17 more liberal, 15 more conservative value
+#define INTERVAL_DEBUG true
 #define REQUIRED_BYTE_WIDTH 16
 #define PAD_UP(TYPE, COUNT, PAD_UP_MOD_VALUE) ((sizeof(TYPE) * COUNT) + (PAD_UP_MOD_VALUE - ((sizeof(TYPE) * COUNT) % PAD_UP_MOD_VALUE)))
 
@@ -268,9 +270,9 @@ void Renderer::UpdateScene()
 void Renderer::DrawScene() const
 {
 	// Clear BackBuffer and change color
-	const auto color = new DirectX::XMFLOAT4 { 0.0f, 0.0f, 0.0f, 1.0f };
+	auto color = D3DXCOLOR { 0.0f, 0.0f, 0.0f, 1.0f };
 	
-	context->ClearRenderTargetView(renderTargetView, reinterpret_cast<FLOAT*>(color));
+	context->ClearRenderTargetView(renderTargetView, GetFloatPtrFromColor(color));
 
 	context->Draw(3, 0);
 
@@ -280,9 +282,11 @@ void Renderer::DrawScene() const
 
 void Renderer::Update(double secs)
 {
-#if defined(INTERVAL_DEBUG)
+#if INTERVAL_DEBUG
 	std::wstringstream stream;
-	stream << "Interval time (potentially delayed by debug - un-define INTERVAL_DEBUG to change)" << secs << std::endl;
+	stream << "Interval time (potentially delayed by debug - un-define INTERVAL_DEBUG to change)";
+	if (!(std::abs(secs) <= 1e-5 * std::abs(secs))) stream << std::setprecision(DOUBLE_PRECISION) << std::fixed << secs << std::endl;
+	else stream << "INTERVAL TO SHORT TO MEASURE WITH QPC" << std::endl;
 	OutputDebugStringW(stream.str().c_str());
 #endif
 	UpdateScene();

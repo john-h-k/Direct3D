@@ -47,7 +47,10 @@
     <ClInclude Include="Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Updateables.h">
+    <ClInclude Include="IUpdateable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DCOLOR.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

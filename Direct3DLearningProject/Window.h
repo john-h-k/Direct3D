@@ -44,8 +44,7 @@ private:
 
 	SIZE_T windowIndex;
 
-	LARGE_INTEGER interval;
-	LARGE_INTEGER frequency;
+	double frequency;
 
 	LPCWSTR WndClassName = L"Window";
 	UniqueWindowHandle windowHandle;
