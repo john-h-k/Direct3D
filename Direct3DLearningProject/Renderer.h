@@ -25,7 +25,7 @@ public:
 	bool InitializeScene();
 	void UpdateScene();
 	void DrawScene() const;
-	void Update() override;
+	void Update(double secs) override;
 
 private:
 	bool CheckFailW(HRESULT hr, LPCWSTR str) const;

@@ -3,11 +3,17 @@
 #include "Renderer.h"
 #include <cassert>
 #include <stdexcept>
+#include <tchar.h>
+#include "DataTypes.h"
+#include "Updateables.h"
+
+#define CONFIRM_EXIT (MessageBoxW(nullptr, L"Are you sure you want to exit?", L"Confirm exit", MB_YESNO | MB_ICONQUESTION) == IDYES)
 
 std::vector<Window*> Window::windows;
 
-Window::Window() : destroyed(false), windowHandle(nullptr, WinHandleDeleter(&destroyed))
+Window::Window() : destroyed(false), interval(), frequency(), windowHandle(nullptr, WinHandleDeleter(&destroyed))
 {
+	QueryPerformanceFrequency(&frequency);
 	// Add this window to the static array of all windows,
 	// and get the index of this
 	windows.push_back(this);
@@ -28,7 +34,7 @@ Window::~Window()
 	}
 	// Remove current instance from static
 	windows.erase(windows.begin() + windowIndex);
-	
+
 }
 
 bool Window::Initialize(HINSTANCE hInstance, const int ShowWnd, const int width, const int height, bool windowed)
@@ -55,7 +61,7 @@ bool Window::Initialize(HINSTANCE hInstance, const int ShowWnd, const int width,
 		return false;
 	}
 
-	windowHandle = handle_pointer(CreateWindowExW(
+	windowHandle = UniqueWindowHandle(CreateWindowExW(
 		0,
 		WndClassName,
 		L"Main Window",
@@ -92,15 +98,20 @@ WPARAM Window::EnterMessageLoop(IUpdateable& updateable)
 	{
 		if (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
-			if (msg.message == WM_QUIT)
-				break;
+			TRACE(R"--(,"% *.*s",PEEK,0x%08x,"%s",0x%08x,0x%08x,0x%08x)--" "\n",
+				0, 0, "", msg.hwnd, "Window HAS msg",
+				msg.message, msg.wParam, msg.lParam);
+
+			if (msg.message == WM_QUIT) break;
 
 			TranslateMessage(&msg);
 			DispatchMessageW(&msg);
 		}
 		else
 		{
-			updateable.Update();
+			QueryPerformanceCounter(&interval);
+			updateable.Update(interval.QuadPart / static_cast<double>(frequency.QuadPart));
+			QueryPerformanceCounter(&interval);
 		}
 	}
 
@@ -114,7 +125,7 @@ LRESULT Window::WndProc(HWND windowHandle, const UINT msg, const WPARAM wParam, 
 	case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE)
 		{
-			if (MessageBoxW(nullptr, L"Confirm exit", L"Exit", MB_YESNO | MB_ICONQUESTION) == IDYES)
+			if (CONFIRM_EXIT)
 			{
 				Window* ref = nullptr;
 				// If exiting, a short for loop won't hurt performance
@@ -136,6 +147,11 @@ LRESULT Window::WndProc(HWND windowHandle, const UINT msg, const WPARAM wParam, 
 				ref->destroyed = static_cast<bool>(DestroyWindow(windowHandle));
 			}
 		}
+		return 0;
+
+	case WM_CLOSE:
+		if (CONFIRM_EXIT) DestroyWindow(windowHandle);
+
 		return 0;
 
 	case WM_DESTROY:

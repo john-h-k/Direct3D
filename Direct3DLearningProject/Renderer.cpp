@@ -8,6 +8,8 @@
 #include <comdef.h>
 #include "DataTypes.h"
 
+#define INTERVAL_DEBUG
+
 #define REQUIRED_BYTE_WIDTH 16
 #define PAD_UP(TYPE, COUNT, PAD_UP_MOD_VALUE) ((sizeof(TYPE) * COUNT) + (PAD_UP_MOD_VALUE - ((sizeof(TYPE) * COUNT) % PAD_UP_MOD_VALUE)))
 
@@ -276,8 +278,13 @@ void Renderer::DrawScene() const
 	swapChain->Present(0, 0);
 }
 
-void Renderer::Update()
+void Renderer::Update(double secs)
 {
+#if defined(INTERVAL_DEBUG)
+	std::wstringstream stream;
+	stream << "Interval time (potentially delayed by debug - un-define INTERVAL_DEBUG to change)" << secs << std::endl;
+	OutputDebugStringW(stream.str().c_str());
+#endif
 	UpdateScene();
 	DrawScene();
 }

@@ -1,12 +1,13 @@
 #pragma once
 #include <windows.h>
-#include "IUpdateable.h"
 #include <vector>
 #include <memory>
 
 #define HWND(a) static_cast<HWND>(a)
 #define HWND_FROM_UP(a) static_cast<HWND>(a.get())
 #define VOID_HWND(a) (static_cast<void *>(a))
+
+class IUpdateable;
 
 struct WinHandleDeleter final
 {
@@ -18,7 +19,7 @@ struct WinHandleDeleter final
 	void operator ()(HWND handle) const noexcept;
 };
 
-using handle_pointer = std::unique_ptr<std::remove_pointer_t<HWND>, WinHandleDeleter>;
+using UniqueWindowHandle = std::unique_ptr<std::remove_pointer_t<HWND>, WinHandleDeleter>;
 
 class Window final
 {
@@ -36,14 +37,18 @@ public:
 
 	auto GetHandle() const { return HWND_FROM_UP(windowHandle); }
 
-	static WPARAM EnterMessageLoop(IUpdateable& updateable);
+	 WPARAM EnterMessageLoop(IUpdateable& updateable);
 private:
 	bool destroyed;
 	static std::vector<Window*> windows;
+
 	SIZE_T windowIndex;
 
+	LARGE_INTEGER interval;
+	LARGE_INTEGER frequency;
+
 	LPCWSTR WndClassName = L"Window";
-	handle_pointer windowHandle;
+	UniqueWindowHandle windowHandle;
 
 	LRESULT static CALLBACK WndProc(HWND windowHandle, UINT msg,
 		WPARAM wParam, LPARAM lParam);

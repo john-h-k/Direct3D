@@ -126,13 +126,14 @@
   <ItemGroup>
     <ClInclude Include="DataTypes.h" />
     <ClInclude Include="Renderer.h" />
-    <ClInclude Include="IUpdateable.h" />
+    <ClInclude Include="Updateables.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="utils.cpp" />
     <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="WinMain.cpp" />

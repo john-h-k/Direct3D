@@ -6,7 +6,7 @@ const int Width = 800;
 const int Height = 600;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-	LPSTR lpCmdLine, const int nShowCmd)
+	LPSTR lpCmdLine, int nShowCmd)
 {
 	// Create a window object. 
 	auto mainWindow = Window();
