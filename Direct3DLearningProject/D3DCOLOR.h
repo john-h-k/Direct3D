@@ -10,12 +10,12 @@ typedef struct D3DXCOLOR
 
 inline FLOAT* GetFloatPtrFromColor(D3DXCOLOR& color)
 {
-	return +color.rgba;
+	return color.rgba;
 }
 
 inline FLOAT* GetFloatPtrFromColor(D3DXCOLOR* color)
 {
-	return +(*color).rgba;
+	return (*color).rgba;
 }
 
 #pragma pack(pop)

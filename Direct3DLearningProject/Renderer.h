@@ -8,53 +8,55 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include "IUpdateable.h"
+#include <wrl/client.h>
 
-class Renderer final : public IUpdateable
+namespace FactaLogicaSoftware
 {
-public:
-	Renderer();
-	Renderer(const Renderer& renderer) = delete;
-	Renderer(Renderer&& renderer) = default;
-	~Renderer();
+	class Renderer final : public IUpdateable
+	{
+	public:
+		Renderer();
+		Renderer(const Renderer& renderer) = delete;
+		Renderer(Renderer&& renderer) = default;
+		~Renderer();
 
-	Renderer& operator = (const Renderer& renderer) = delete;
-	Renderer& operator = (Renderer&& renderer) = default;
+		Renderer& operator = (const Renderer& renderer) = delete;
+		Renderer& operator = (Renderer&& renderer) = default;
 
-	bool InitializeDirect3D11App(HINSTANCE hInstance, int width, int height, HWND windowHandle);
-	void Release();
-	bool InitializeScene();
-	void UpdateScene();
-	void DrawScene() const;
-	void Update(double secs) override;
+		bool InitializeDirect3D11App(HINSTANCE hInstance, int width, int height, HWND windowHandle);
+		bool InitializeScene();
+		void UpdateScene();
+		void DrawScene() const;
+		void Update(double secs) override;
 
-private:
-	bool CheckFailW(HRESULT hr, LPCWSTR str) const;
-	bool CheckFailA(HRESULT hr, LPCSTR str) const;
+	private:
+		bool CheckFailW(HRESULT hr, LPCWSTR str) const;
+		bool CheckFailA(HRESULT hr, LPCSTR str) const;
 
-	bool initialized;
-	bool released;
+		bool initialized;
 
-	HWND window{};
-	float height;
-	float width;
+		HWND window{};
+		float height;
+		float width;
 
-	// DO NOT DELETE THESE OBJECTS USING "delete"!!
-	// They are COM objects and will destroy themselves
-	// once they have no references left to them. Just call "Release()"
-	// when you are finished with them
+		// DO NOT DELETE THESE OBJECTS USING "delete"!!
+		// They are COM objects and will destroy themselves
+		// once they have no references left to them. Just call "Release()"
+		// when you are finished with them
 
-	IDXGISwapChain* swapChain{};
-	ID3D11Device* device{};
-	ID3D11DeviceContext* context{};
-	ID3D11RenderTargetView* renderTargetView{};
+		Microsoft::WRL::ComPtr<IDXGISwapChain> swapChain{};
+		Microsoft::WRL::ComPtr<ID3D11Device> device{};
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext> context{};
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetView{};
+		Microsoft::WRL::ComPtr<ID3D11Buffer> triangularVertexBuffer{};
+		Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader{};
+		Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader{};
+		Microsoft::WRL::ComPtr<ID3DBlob> vertexShaderBuffer{};
+		Microsoft::WRL::ComPtr<ID3DBlob> pixelShaderBuffer{};
+		Microsoft::WRL::ComPtr<ID3D11InputLayout> vertexLayout{};
 
-	ID3D11Buffer* triangularVertexBuffer{};
-	ID3D11VertexShader* vertexShader{};
-	ID3D11PixelShader* pixelShader{};
-	ID3DBlob* vertexShaderBuffer{};
-	ID3DBlob* pixelShaderBuffer{};
-	ID3D11InputLayout* vertexLayout{};
-
-	D3D11_INPUT_ELEMENT_DESC layoutArray[2]{};
-	UINT layoutElementCount;
-};
+		D3D11_INPUT_ELEMENT_DESC layoutArray[2]{};
+		UINT layoutElementCount;
+	};
+	
+}

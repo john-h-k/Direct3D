@@ -1,15 +1,20 @@
 ﻿#pragma once
 
+#define CONFIRM_EXIT (MessageBoxW(nullptr, L"Are you sure you want to exit?", L"Confirm exit", MB_YESNO | MB_ICONQUESTION) == IDYES)
+
 #if UNICODE
 #define MESSAGE_FAILED(HR, STRING) CheckFailW(HR, STRING)
+#define MSG_FAIL_RETB(HR, STRING) if (CheckFailW(HR, STRING)) { return false; }
+#define MSG_FAIL_THROW(HR, STRING) if (CheckFailW(HR, STRING)) { throw std::logic_error("HRESULT failed"); }
 #elif
 #define MESSAGE_FAILED(HR, STRING) CheckFailA(HR, STRING)
+#define MSG_FAIL_RETB(HR, STRING) (if (CheckFailA(HR, STRING)) { return false; })
+#define MSG_FAIL_THROW(HR, STRING) (if (CheckFailA(HR, STRING)) { throw std::logic_error("HRESULT failed"); })
 #endif
 
 #include <crtdbg.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdarg>
+#include <cstdio>
 
 #ifdef _DEBUG
 #define TRACEMAXSTRING  1024

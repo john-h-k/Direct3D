@@ -53,6 +53,9 @@
     <ClInclude Include="D3DCOLOR.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ERRORCODES.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Direct3DLearningProject.rc">
@@ -61,5 +64,8 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Effects.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
