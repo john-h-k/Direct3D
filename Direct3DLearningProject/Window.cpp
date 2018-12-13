@@ -7,6 +7,8 @@
 
 namespace FactaLogicaSoftware
 {
+
+#define DESIRED_FPS 60
 // TODO make based off thread ID as well
 #define VERIFY_HANDLE(HANDLE) 	if\
 	(publicHandle && !IsWindow(windowHandle.get())) throw std::runtime_error("Window destroyed outside of object");
@@ -131,6 +133,7 @@ namespace FactaLogicaSoftware
 			else
 			{
 				QueryPerformanceCounter(&delta);
+				Sleep(static_cast<DWORD>(DESIRED_FPS - (delta.QuadPart - interval.QuadPart) / (static_cast<unsigned long>(frequency) * 1000)));
 				updateable.Update((delta.QuadPart - interval.QuadPart) / frequency);
 				QueryPerformanceCounter(&interval);
 			}

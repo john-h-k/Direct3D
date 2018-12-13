@@ -63,6 +63,8 @@ namespace FactaLogicaSoftware
 		D3D_FEATURE_LEVEL 								featureLevel;
 		D3D11_INPUT_ELEMENT_DESC						layoutArray[2];
 		UINT											layoutElementCount;
+		UINT											vertexCount;
+		UINT											indexCount;
 	};
 	
 } 

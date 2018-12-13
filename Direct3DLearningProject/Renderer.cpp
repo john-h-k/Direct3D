@@ -120,7 +120,7 @@ namespace FactaLogicaSoftware
 			renderer.context.GetAddressOf()
 		);
 
-		assert(std::find(permissibleFeatureLevels, permissibleFeatureLevels + ARRAYSIZE(permissibleFeatureLevels), 0) != permissibleFeatureLevels + ARRAYSIZE(permissibleFeatureLevels));
+		assert(std::find(permissibleFeatureLevels, permissibleFeatureLevels + ARRAYSIZE(permissibleFeatureLevels), renderer.featureLevel) != permissibleFeatureLevels + ARRAYSIZE(permissibleFeatureLevels));
 
 		STATIC_MSG_FAIL_RET_FAIL(hr, L"Fatal error occured in creation of Device and Swap Chain");
 
@@ -204,34 +204,22 @@ namespace FactaLogicaSoftware
 		context->VSSetShader(vertexShader.Get(), nullptr, 0);
 		context->PSSetShader(pixelShader.Get(), nullptr, 0);
 
-		DWORD indices[] =
-		{
-			0, 1, 2,
-			0, 2, 3
-		};
-
-		D3D11_BUFFER_DESC indexBufferDesc;
-
-		ZeroStruct(indexBufferDesc);
-
-		indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		indexBufferDesc.ByteWidth = sizeof(indices);
-		indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		indexBufferDesc.CPUAccessFlags = 0;
-		indexBufferDesc.MiscFlags = 0;
-
-		D3D11_SUBRESOURCE_DATA indexBufferData;
-
-		indexBufferData.pSysMem = indices;
-		hr = device->CreateBuffer(&indexBufferDesc, &indexBufferData, squareIndexBuffer.GetAddressOf());
-
 		Vertex vertices[] =
 		{
 			Vertex(-0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f),
 			Vertex(-0.5f,  0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f),
 			Vertex(0.5f,  0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f),
 			Vertex(0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f),
+			Vertex(1.0f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f),
 		};
+
+		DWORD indices[] =
+		{
+			0, 1, 2,
+			0, 2, 3,
+		};
+
+		vertexCount = ARRAYSIZE(vertices);
 
 		D3D11_BUFFER_DESC vertexBufferDesc;
 
@@ -256,6 +244,23 @@ namespace FactaLogicaSoftware
 		hr = device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &squareVertexBuffer);
 
 		MSG_FAIL_RET_FALSE(hr, L"Failure creating device vertex buffer");
+
+		indexCount = ARRAYSIZE(indices);
+
+		D3D11_BUFFER_DESC indexBufferDesc;
+
+		ZeroStruct(indexBufferDesc);
+
+		indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		indexBufferDesc.ByteWidth = sizeof(indices);
+		indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		indexBufferDesc.CPUAccessFlags = 0;
+		indexBufferDesc.MiscFlags = 0;
+
+		D3D11_SUBRESOURCE_DATA indexBufferData;
+
+		indexBufferData.pSysMem = indices;
+		hr = device->CreateBuffer(&indexBufferDesc, &indexBufferData, squareIndexBuffer.GetAddressOf());
 
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
@@ -294,7 +299,7 @@ namespace FactaLogicaSoftware
 
 		context->ClearRenderTargetView(renderTargetView.Get(), GetFloatPtrFromColor(color));
 
-		context->DrawIndexed(6, 0, 0);
+		context->DrawIndexed(indexCount, 0, 0);
 
 		// Present the buffers
 		swapChain->Present(0, 0);
