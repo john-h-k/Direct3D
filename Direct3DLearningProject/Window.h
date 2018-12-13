@@ -17,7 +17,11 @@ namespace FactaLogicaSoftware
 		explicit WinHandleDeleter(bool* destroyed) : destroyed(destroyed)
 		{}
 
-		void operator ()(HWND handle) const noexcept;
+		void operator()(HWND handle) const noexcept
+		{
+			*destroyed = static_cast<bool>(DestroyWindow(handle));
+		}
+
 	};
 
 	using UniqueWindowHandle = std::unique_ptr<std::remove_pointer_t<HWND>, WinHandleDeleter>;
@@ -25,23 +29,30 @@ namespace FactaLogicaSoftware
 	class Window final
 	{
 	public:
-		Window();
 		Window(const Window&) = delete;
-		Window(Window&&) = default;
 		~Window();
 
 		Window& operator = (const Window&) = delete;
 		Window& operator = (Window&&) = default;
 
-		bool Initialize(HINSTANCE hInstance, int ShowWnd,
-		                int width, int height, bool windowed);
+		static Window Create(HINSTANCE hInstance, int ShowWnd, int width,
+		                   int height, LPCWSTR name, bool windowed = false);
 
 		auto GetHandle() const { return HWND_FROM_UP(windowHandle); }
 		auto IsDestroyed() const { return destroyed; }
 
-		WPARAM EnterMessageLoop(IUpdateable& updateable);
+		WPARAM EnterMessageLoop(IUpdateable& updateable) const;
+
+		bool Successful() const { return !initFailed; }
+		void SetHandleAccess(bool _public);
+
 	private:
+		Window();
+		Window(Window&&) = default;
+
+		bool publicHandle;
 		bool destroyed;
+		bool initFailed;
 		static std::vector<Window*> windows;
 
 		SIZE_T windowIndex;
@@ -51,7 +62,8 @@ namespace FactaLogicaSoftware
 		LPCWSTR WndClassName = L"Window";
 		UniqueWindowHandle windowHandle;
 
-		LRESULT static CALLBACK WndProc(HWND windowHandle, UINT msg,
+		static Window* GetWindowPtrFromHandle(HWND handle);
+		static LRESULT CALLBACK WndProc(HWND windowHandle, UINT msg,
 		                                WPARAM wParam, LPARAM lParam);
 	};
 }

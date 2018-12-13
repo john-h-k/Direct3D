@@ -1,2 +1,2 @@
 #include "DataTypes.h"
-char szBuffer[TRACEMAXSTRING];
+char traceBuffer[TRACEMAXSTRING];

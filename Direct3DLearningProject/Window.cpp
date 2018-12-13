@@ -7,26 +7,37 @@
 
 namespace FactaLogicaSoftware
 {
+// TODO make based off thread ID as well
+#define VERIFY_HANDLE(HANDLE) 	if\
+	(publicHandle && !IsWindow(windowHandle.get())) throw std::runtime_error("Window destroyed outside of object");
+
+
 	std::vector<Window*> Window::windows;
 
-	Window::Window() : destroyed(false), windowHandle(nullptr, WinHandleDeleter(&destroyed))  // NOLINT
+	void Window::SetHandleAccess(bool _public)
+	{
+		this->publicHandle = _public;
+	}
+
+	Window::Window() : publicHandle(false), destroyed(false), initFailed(false), windowHandle(nullptr, WinHandleDeleter(&destroyed))  // NOLINT
 	{
 		LARGE_INTEGER freq;
 		QueryPerformanceFrequency(&freq);
 		frequency = freq.QuadPart / 1000.0;
+
 		// Add this window to the static array of all windows,
 		// and get the index of this
 		windows.push_back(this);
 		windowIndex = windows.size() - 1;
 	}
 
-	void WinHandleDeleter::operator()(HWND handle) const noexcept
-	{
-		*destroyed = static_cast<bool>(DestroyWindow(handle));
-	}
-
 	Window::~Window()
 	{
+		if (publicHandle && !IsWindow(windowHandle.get()))
+		{
+			destroyed = true;
+		}
+
 		if (!destroyed)
 		{
 			// What to do if destroy failed? TODO
@@ -37,8 +48,11 @@ namespace FactaLogicaSoftware
 
 	}
 
-	bool Window::Initialize(HINSTANCE hInstance, const int ShowWnd, const int width, const int height, bool windowed)
+	Window Window::Create(HINSTANCE hInstance, int ShowWnd, int width, int height, LPCWSTR name, bool windowed)
 	{
+		Window window;
+		window.WndClassName = name;
+
 		// The descriptor of this window
 		WNDCLASSEX windowClass;
 
@@ -52,18 +66,20 @@ namespace FactaLogicaSoftware
 		windowClass.hCursor = LoadCursorW(nullptr, IDC_ARROW);
 		windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 10);
 		windowClass.lpszMenuName = nullptr;
-		windowClass.lpszClassName = WndClassName;
+		windowClass.lpszClassName = name;
 		windowClass.hIconSm = LoadIconW(nullptr, IDI_WINLOGO);
 
 		if (!RegisterClassExW(&windowClass))
 		{
 			MessageBoxW(nullptr, L"Error initializing window", L"Error", MB_OK | MB_ICONERROR);
-			return false;
+			auto failWindow = Window();
+			failWindow.initFailed = true;
+			return failWindow;
 		}
 
-		windowHandle = UniqueWindowHandle(CreateWindowExW(
+		window.windowHandle = UniqueWindowHandle(CreateWindowExW(
 			0,
-			WndClassName,
+			name,
 			L"Main Window",
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT,
@@ -74,22 +90,26 @@ namespace FactaLogicaSoftware
 			nullptr,
 			hInstance,
 			nullptr
-		), WinHandleDeleter(&destroyed));
+		), WinHandleDeleter(&window.destroyed));
 
-		if (!windowHandle)
+		if (!window.windowHandle)
 		{
 			MessageBoxA(nullptr, "Error initializing window", "Error", MB_OK | MB_ICONERROR);
-			return false;
+			auto failWindow = Window();
+			failWindow.initFailed = true;
+			return failWindow;
 		}
 
-		ShowWindow(HWND_FROM_UP(windowHandle), ShowWnd);
-		UpdateWindow(HWND_FROM_UP(windowHandle));
+		ShowWindow(HWND_FROM_UP(window.windowHandle), ShowWnd);
+		UpdateWindow(HWND_FROM_UP(window.windowHandle));
 
-		return true;
+		return window;
 	}
 
 	WPARAM Window::EnterMessageLoop(IUpdateable& updateable) const
 	{
+		VERIFY_HANDLE(windowHandle);
+
 		MSG msg;
 
 		ZeroMemory(&msg, sizeof(MSG));
@@ -103,7 +123,7 @@ namespace FactaLogicaSoftware
 		{
 			if (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
 			{
-				if (msg.message == WM_QUIT) break;
+				if (msg.message == WM_QUIT) { break; };
 
 				TranslateMessage(&msg);
 				DispatchMessageW(&msg);
@@ -119,7 +139,7 @@ namespace FactaLogicaSoftware
 		return msg.wParam;
 	}
 
-	LRESULT Window::WndProc(HWND windowHandle, const UINT msg, const WPARAM wParam, const LPARAM lParam)
+	LRESULT Window::WndProc(HWND windowHandle, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (msg)
 		{
@@ -132,6 +152,10 @@ namespace FactaLogicaSoftware
 					// Link the HWND handle to the respective window using the static
 					// array
 					Window* ref = GetWindowPtrFromHandle(windowHandle);
+					if (!ref)
+					{
+						throw std::logic_error("No corresponding handle found for window");
+					}
 					ref->destroyed = static_cast<bool>(DestroyWindow(windowHandle));
 				}
 			}
@@ -144,6 +168,10 @@ namespace FactaLogicaSoftware
 				// Link the HWND handle to the respective window using the static
 				// array
 				Window* ref = GetWindowPtrFromHandle(windowHandle);
+				if (!ref)
+				{
+					throw std::logic_error("No corresponding handle found for window");
+				}
 				ref->destroyed = static_cast<bool>(DestroyWindow(windowHandle));
 			}
 

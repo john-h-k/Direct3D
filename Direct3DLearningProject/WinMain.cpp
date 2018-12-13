@@ -11,20 +11,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	LPSTR lpCmdLine, int nShowCmd)
 {
 	// Create a window object. 
-	auto mainWindow = FactaLogicaSoftware::Window();
+	auto mainWindow = FactaLogicaSoftware::Window::Create(hInstance, nShowCmd, Width, Height, L"Window");
 
 	// Try to initialize the window using the WinMain args
-	if (!mainWindow.Initialize(hInstance, nShowCmd, Width, Height, true))
+	if (!mainWindow.Successful())
 	{
 		MessageBoxW(nullptr, L"Failed Window Initialization", L"Error", MB_OK);
 		return FAIL_WINDOW_INIT;
 	}
 
 	// The Direct3D object used for rendering
-	FactaLogicaSoftware::Renderer graphics = FactaLogicaSoftware::Renderer();
+	FactaLogicaSoftware::Renderer graphics = FactaLogicaSoftware::Renderer::Create(hInstance, Width, Height, mainWindow.GetHandle());
 
 	// Try to initialize the renderer using the window
-	if (!graphics.InitializeDirect3D11App(hInstance, Width, Height, mainWindow.GetHandle()))
+	if (!graphics.Successful())
 	{
 		MessageBoxW(nullptr, L"Error initializing Direct3D11", L"Error", MB_OK);
 		return FAIL_DIRECT3D_INIT;
