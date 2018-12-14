@@ -59,9 +59,11 @@ namespace FactaLogicaSoftware
 		Microsoft::WRL::ComPtr<ID3DBlob>				pixelShaderBuffer {};
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			squareIndexBuffer {};
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			squareVertexBuffer {};
+		Microsoft::WRL::ComPtr<ID3D11Texture2D>			depthStencilBuffer{};
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView>	depthStencilView{};
 
 		D3D_FEATURE_LEVEL 								featureLevel;
-		D3D11_INPUT_ELEMENT_DESC						layoutArray[2];
+		D3D11_INPUT_ELEMENT_DESC						layoutArray[2] {};
 		UINT											layoutElementCount;
 	};
 	

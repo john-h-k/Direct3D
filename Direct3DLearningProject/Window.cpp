@@ -7,19 +7,14 @@
 
 namespace FactaLogicaSoftware
 {
-// TODO make based off thread ID as well
+#define DESIRED_INTERVAL_MS ((1000 / 60))
+	// TODO make based off thread ID as well
 #define VERIFY_HANDLE(HANDLE) 	if\
-	(publicHandle && !IsWindow(windowHandle.get())) throw std::runtime_error("Window destroyed outside of object");
-
+	(publicHandle && !IsWindow(windowHandle.get())) { throw std::runtime_error("Window destroyed outside of object"); }
 
 	std::vector<Window*> Window::windows;
 
-	void Window::SetHandleAccess(bool _public)
-	{
-		this->publicHandle = _public;
-	}
-
-	Window::Window() : publicHandle(false), destroyed(false), initFailed(false), windowHandle(nullptr, WinHandleDeleter(&destroyed))  // NOLINT
+	Window::Window(HINSTANCE hInstance, int ShowWnd, int width, int height, LPCWSTR name, bool windowed)
 	{
 		LARGE_INTEGER freq;
 		QueryPerformanceFrequency(&freq);
@@ -28,30 +23,8 @@ namespace FactaLogicaSoftware
 		// Add this window to the static array of all windows,
 		// and get the index of this
 		windows.push_back(this);
-		windowIndex = windows.size() - 1;
-	}
 
-	Window::~Window()
-	{
-		if (publicHandle && !IsWindow(windowHandle.get()))
-		{
-			destroyed = true;
-		}
-
-		if (!destroyed)
-		{
-			// What to do if destroy failed? TODO
-			destroyed = DestroyWindow(HWND_FROM_UP(windowHandle));
-		}
-		// Remove current instance from static
-		windows.erase(windows.begin() + windowIndex);
-
-	}
-
-	Window Window::Create(HINSTANCE hInstance, int ShowWnd, int width, int height, LPCWSTR name, bool windowed)
-	{
-		Window window;
-		window.WndClassName = name;
+		WndClassName = name;
 
 		// The descriptor of this window
 		WNDCLASSEX windowClass;
@@ -72,12 +45,10 @@ namespace FactaLogicaSoftware
 		if (!RegisterClassExW(&windowClass))
 		{
 			MessageBoxW(nullptr, L"Error initializing window", L"Error", MB_OK | MB_ICONERROR);
-			auto failWindow = Window();
-			failWindow.initFailed = true;
-			return failWindow;
+			initFailed = true;
 		}
 
-		window.windowHandle = UniqueWindowHandle(CreateWindowExW(
+		windowHandle = UniqueWindowHandle(CreateWindowExW(
 			0,
 			name,
 			L"Main Window",
@@ -90,20 +61,33 @@ namespace FactaLogicaSoftware
 			nullptr,
 			hInstance,
 			nullptr
-		), WinHandleDeleter(&window.destroyed));
+		), WinHandleDeleter(&destroyed));
 
-		if (!window.windowHandle)
+		if (!windowHandle)
 		{
 			MessageBoxA(nullptr, "Error initializing window", "Error", MB_OK | MB_ICONERROR);
-			auto failWindow = Window();
-			failWindow.initFailed = true;
-			return failWindow;
+			initFailed = true;
 		}
 
-		ShowWindow(HWND_FROM_UP(window.windowHandle), ShowWnd);
-		UpdateWindow(HWND_FROM_UP(window.windowHandle));
+		ShowWindow(HWND_FROM_UP(windowHandle), ShowWnd);
+		UpdateWindow(HWND_FROM_UP(windowHandle));
+	}
 
-		return window;
+	Window::~Window()
+	{
+		if (publicHandle && !IsWindow(windowHandle.get()))
+		{
+			destroyed = true;
+		}
+
+		if (!destroyed)
+		{
+			// What to do if destroy failed? TODO
+			destroyed = ::DestroyWindow(HWND_FROM_UP(windowHandle));
+		}
+		// Remove current instance from static
+		windows.erase(windows.begin() + windowIndex);
+
 	}
 
 	WPARAM Window::EnterMessageLoop(IUpdateable& updateable) const
@@ -121,6 +105,12 @@ namespace FactaLogicaSoftware
 
 		while (true)
 		{
+			if (exception.exceptionThrown)
+			{
+				// Manage exception
+				throw std::exception(*exception.value);
+			}
+
 			if (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
 			{
 				if (msg.message == WM_QUIT) { break; };
@@ -131,12 +121,23 @@ namespace FactaLogicaSoftware
 			else
 			{
 				QueryPerformanceCounter(&delta);
+				Sleep(static_cast<DWORD>(DESIRED_INTERVAL_MS - ((delta.QuadPart - interval.QuadPart) / frequency / 1000.0)));  // NOLINT
 				updateable.Update((delta.QuadPart - interval.QuadPart) / frequency);
 				QueryPerformanceCounter(&interval);
 			}
 		}
 
 		return msg.wParam;
+	}
+
+	void Window::DestroyWindow(HWND handle)
+	{
+		Window* ref = GetWindowPtrFromHandle(handle);
+		if (!ref)
+		{
+			auto exception = WndProcException(true, new std::runtime_error("No corresponding handle found for window"));
+		}
+		ref->destroyed = static_cast<bool>(::DestroyWindow(handle));
 	}
 
 	LRESULT Window::WndProc(HWND windowHandle, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -148,15 +149,7 @@ namespace FactaLogicaSoftware
 			{
 				if (CONFIRM_EXIT)
 				{
-					// If exiting, a short for loop won't hurt performance
-					// Link the HWND handle to the respective window using the static
-					// array
-					Window* ref = GetWindowPtrFromHandle(windowHandle);
-					if (!ref)
-					{
-						throw std::logic_error("No corresponding handle found for window");
-					}
-					ref->destroyed = static_cast<bool>(DestroyWindow(windowHandle));
+					DestroyWindow(windowHandle);
 				}
 			}
 			return 0;
@@ -164,15 +157,7 @@ namespace FactaLogicaSoftware
 		case WM_CLOSE:
 			if (CONFIRM_EXIT)
 			{
-				// If exiting, a short for loop won't hurt performance
-				// Link the HWND handle to the respective window using the static
-				// array
-				Window* ref = GetWindowPtrFromHandle(windowHandle);
-				if (!ref)
-				{
-					throw std::logic_error("No corresponding handle found for window");
-				}
-				ref->destroyed = static_cast<bool>(DestroyWindow(windowHandle));
+				DestroyWindow(windowHandle);
 			}
 
 			return 0;

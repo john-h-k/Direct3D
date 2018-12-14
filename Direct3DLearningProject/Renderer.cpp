@@ -120,8 +120,6 @@ namespace FactaLogicaSoftware
 			renderer.context.GetAddressOf()
 		);
 
-		assert(std::find(permissibleFeatureLevels, permissibleFeatureLevels + ARRAYSIZE(permissibleFeatureLevels), 0) != permissibleFeatureLevels + ARRAYSIZE(permissibleFeatureLevels));
-
 		STATIC_MSG_FAIL_RET_FAIL(hr, L"Fatal error occured in creation of Device and Swap Chain");
 
 		// Declare and create the back buffer using the descriptions
@@ -160,9 +158,9 @@ namespace FactaLogicaSoftware
 
 		if (errors)
 		{
-			std::ofstream file;
-			file.open("log.txt", std::ios_base::app);
-			file << "Shader compile error message: "
+			std::wofstream file;
+			file.open(L"log.txt", std::ios_base::app);
+			file << L"Shader compile error message: "
 				<< static_cast<const char *>(errors->GetBufferPointer());
 			file.close();
 			return false;
@@ -183,9 +181,9 @@ namespace FactaLogicaSoftware
 
 		if (errors)
 		{
-			std::ofstream file;
-			file.open("log.txt", std::ios_base::app);
-			file << "Shader compile error message: "
+			std::wofstream file;
+			file.open(L"log.txt", std::ios_base::app);
+			file << L"Shader compile error message: "
 				<< static_cast<const char *>(errors->GetBufferPointer());
 			file.close();
 			return false;
@@ -206,8 +204,7 @@ namespace FactaLogicaSoftware
 
 		DWORD indices[] =
 		{
-			0, 1, 2,
-			0, 2, 3
+			0, 1, 2
 		};
 
 		D3D11_BUFFER_DESC indexBufferDesc;
@@ -228,9 +225,9 @@ namespace FactaLogicaSoftware
 		Vertex vertices[] =
 		{
 			Vertex(-0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f),
-			Vertex(-0.5f,  0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f),
-			Vertex(0.5f,  0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f),
-			Vertex(0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f),
+			Vertex(-0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f),
+			Vertex(0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f),
+			Vertex(0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f)
 		};
 
 		D3D11_BUFFER_DESC vertexBufferDesc;
@@ -240,8 +237,8 @@ namespace FactaLogicaSoftware
 		vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		vertexBufferDesc.ByteWidth = PAD_UP(sizeof(vertices), REQUIRED_BYTE_WIDTH);
 		vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		vertexBufferDesc.CPUAccessFlags = 0;
-		vertexBufferDesc.MiscFlags = 0;
+		vertexBufferDesc.CPUAccessFlags = NULL;
+		vertexBufferDesc.MiscFlags = NULL;
 
 		D3D11_SUBRESOURCE_DATA vertexBufferData;
 
@@ -304,9 +301,8 @@ namespace FactaLogicaSoftware
 	{
 #ifdef INTERVAL_DEBUG
 		std::wstringstream stream;
-		stream << "Interval time (potentially delayed by debug - un-define INTERVAL_DEBUG to change)";
-		if (!(0 <= 1e-17 * std::abs(secs))) stream << std::setprecision(DOUBLE_PRECISION) << std::fixed << secs << std::endl;
-		else stream << "INTERVAL TO SHORT TO MEASURE WITH QPC" << std::endl;
+		stream << "Interval time: ";
+		stream << std::setprecision(DOUBLE_PRECISION) << std::fixed << secs << std::endl;
 		OutputDebugStringW(stream.str().c_str());
 #endif
 		UpdateScene();
@@ -323,7 +319,7 @@ namespace FactaLogicaSoftware
 			stringstream << CW2A(str) << " HRESULT Error Code: "
 				<< hr << " (" << CW2A(_com_error(hr).ErrorMessage()) << ")";
 
-			MessageBoxW(window, stringstream.str().c_str(), L"Error", MB_OK);
+			MessageBoxW(window, stringstream.str().c_str(), L"Error", MB_OK | MB_ICONERROR);
 
 			return true;
 		}

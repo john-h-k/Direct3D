@@ -11,7 +11,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	LPSTR lpCmdLine, int nShowCmd)
 {
 	// Create a window object. 
-	auto mainWindow = FactaLogicaSoftware::Window::Create(hInstance, nShowCmd, Width, Height, L"Window");
+	auto mainWindow = FactaLogicaSoftware::Window(hInstance, nShowCmd, Width, Height, L"Window");
 
 	// Try to initialize the window using the WinMain args
 	if (!mainWindow.Successful())

@@ -1,7 +1,7 @@
 #pragma once
 namespace FactaLogicaSoftware
 {
-	class IUpdateable // NOLINT(cppcoreguidelines-special-member-functions, hicpp-special-member-functions)
+	class IUpdateable// NOLINT(cppcoreguidelines-special-member-functions, hicpp-special-member-functions)
 	{
 	public:
 		virtual ~IUpdateable() = default;
