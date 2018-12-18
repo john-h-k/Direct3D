@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include "IUpdateable.h"
+#include <map>
 
 #define HWND(a) (static_cast<HWND>(a))
 #define HWND_FROM_UP(a) (static_cast<HWND>(a.get()))
@@ -57,7 +58,7 @@ namespace FactaLogicaSoftware
 
 	private:
 		static void DestroyWindow(HWND handle);
-		WndProcException exception{false, nullptr};
+		static std::map<HWND, WndProcException> exceptions;
 
 		bool publicHandle = false;
 		bool destroyed = false;

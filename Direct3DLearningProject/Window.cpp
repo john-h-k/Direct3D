@@ -13,6 +13,7 @@ namespace FactaLogicaSoftware
 	(publicHandle && !IsWindow(windowHandle.get())) { throw std::runtime_error("Window destroyed outside of object"); }
 
 	std::vector<Window*> Window::windows;
+	std::map<HWND, WndProcException> Window::exceptions;
 
 	Window::Window(HINSTANCE hInstance, int ShowWnd, int width, int height, LPCWSTR name, bool windowed)
 	{
@@ -103,6 +104,11 @@ namespace FactaLogicaSoftware
 
 		QueryPerformanceCounter(&interval);
 
+		const auto result = exceptions.find(this->windowHandle.get());
+		const auto exception = result == exceptions.end() 
+			? WndProcException(result->second.exceptionThrown, result->second.value.release()) 
+			: WndProcException(false, nullptr);
+
 		while (true)
 		{
 			if (exception.exceptionThrown)
@@ -135,7 +141,8 @@ namespace FactaLogicaSoftware
 		Window* ref = GetWindowPtrFromHandle(handle);
 		if (!ref)
 		{
-			auto exception = WndProcException(true, new std::runtime_error("No corresponding handle found for window"));
+			// Function is called from WndProc, which can't catch
+			exceptions[handle] = WndProcException(true, new std::runtime_error("No corresponding handle found for window"));
 		}
 		ref->destroyed = static_cast<bool>(::DestroyWindow(handle));
 	}
@@ -180,7 +187,6 @@ namespace FactaLogicaSoftware
 				return window;
 			}
 		}
-
 		return nullptr;
 	}
 }
