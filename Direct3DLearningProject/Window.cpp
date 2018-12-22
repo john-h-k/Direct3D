@@ -5,9 +5,11 @@
 #include <tchar.h>
 #include "DataTypes.h"
 
+#define global
+
 namespace FactaLogicaSoftware
 {
-#define DESIRED_INTERVAL_MS ((1000 / 60))
+	constexpr auto DESIRED_INTERVAL_MS = (1000 / 60);
 	// TODO make based off thread ID as well
 #define VERIFY_HANDLE(HANDLE) 	if\
 	(publicHandle && !IsWindow(windowHandle.get())) { throw std::runtime_error("Window destroyed outside of object"); }
@@ -70,8 +72,8 @@ namespace FactaLogicaSoftware
 			initFailed = true;
 		}
 
-		ShowWindow(HWND_FROM_UP(windowHandle), ShowWnd);
-		UpdateWindow(HWND_FROM_UP(windowHandle));
+		ShowWindow(HWND_FROM_UNIQUE_PTR(windowHandle), ShowWnd);
+		UpdateWindow(HWND_FROM_UNIQUE_PTR(windowHandle));
 	}
 
 	Window::~Window()
@@ -84,7 +86,7 @@ namespace FactaLogicaSoftware
 		if (!destroyed)
 		{
 			// What to do if destroy failed? TODO
-			destroyed = ::DestroyWindow(HWND_FROM_UP(windowHandle));
+			destroyed = global::DestroyWindow(HWND_FROM_UNIQUE_PTR(windowHandle));
 		}
 		// Remove current instance from static
 		windows.erase(windows.begin() + windowIndex);
@@ -105,8 +107,8 @@ namespace FactaLogicaSoftware
 		QueryPerformanceCounter(&interval);
 
 		const auto result = exceptions.find(this->windowHandle.get());
-		const auto exception = result == exceptions.end() 
-			? WndProcException(result->second.exceptionThrown, result->second.value.release()) 
+		const auto exception = result == exceptions.end()
+			? WndProcException(result->second.exceptionThrown, result->second.value.release())
 			: WndProcException(false, nullptr);
 
 		while (true)
@@ -144,7 +146,7 @@ namespace FactaLogicaSoftware
 			// Function is called from WndProc, which can't catch
 			exceptions[handle] = WndProcException(true, new std::runtime_error("No corresponding handle found for window"));
 		}
-		ref->destroyed = static_cast<bool>(::DestroyWindow(handle));
+		ref->destroyed = static_cast<bool>(global::DestroyWindow(handle));
 	}
 
 	LRESULT Window::WndProc(HWND windowHandle, UINT msg, WPARAM wParam, LPARAM lParam)

@@ -6,7 +6,7 @@
 #include <map>
 
 #define HWND(a) (static_cast<HWND>(a))
-#define HWND_FROM_UP(a) (static_cast<HWND>(a.get()))
+#define HWND_FROM_UNIQUE_PTR(a) (static_cast<HWND>(a.get()))
 #define VOID_HWND(a) (static_cast<void *>(a))
 
 namespace FactaLogicaSoftware
@@ -47,36 +47,37 @@ namespace FactaLogicaSoftware
 		Window& operator = (const Window&) = delete;
 		Window& operator = (Window&&) = delete;
 
-		auto GetHandle() const { return HWND_FROM_UP(windowHandle); }
-		auto IsDestroyed() const { return destroyed; }
+		auto GetHandle() const noexcept { return HWND_FROM_UNIQUE_PTR(windowHandle); }
+		auto IsDestroyed() const noexcept { return destroyed; }
 
 		WPARAM EnterMessageLoop(IUpdateable& updateable) const;
 
-		bool Successful() const { return !initFailed; }
-		void SetHandleAccess(bool _publicHandle) { publicHandle = _publicHandle; }
-		bool IsHandlePublic() const { return publicHandle;  }
+		bool Successful() const noexcept { return !initFailed; }
+		void SetHandleAccess(bool isHandlePublic) noexcept { publicHandle = isHandlePublic; }
+		bool IsHandlePublic() const noexcept { return publicHandle; }
 
 	private:
 		static void DestroyWindow(HWND handle);
+		static std::vector<Window*> windows;
 		static std::map<HWND, WndProcException> exceptions;
 
 		bool publicHandle = false;
 		bool destroyed = false;
 		bool initFailed = false;
-		static std::vector<Window*> windows;
 
 		SIZE_T windowIndex{};
 
 		double frequency;
 
 		LPCWSTR WndClassName = L"Window";
-		UniqueWindowHandle windowHandle{
+		UniqueWindowHandle windowHandle
+		{
 			nullptr,
 			WinHandleDeleter(&destroyed)
 		};
 
 		static Window* GetWindowPtrFromHandle(HWND handle);
 		static LRESULT CALLBACK WndProc(HWND windowHandle, UINT msg,
-		                                WPARAM wParam, LPARAM lParam);
+			WPARAM wParam, LPARAM lParam);
 	};
 }
